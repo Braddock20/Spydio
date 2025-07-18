@@ -3,22 +3,19 @@ const ytdl = require("ytdl-core");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const url = req.query.url;
-  const type = req.query.type || "mp4";
-
-  if (!url) return res.status(400).json({ error: "Missing URL" });
+  const { url } = req.query;
+  if (!url || !ytdl.validateURL(url)) {
+    return res.status(400).json({ error: "Invalid YouTube URL" });
+  }
 
   try {
     const info = await ytdl.getInfo(url);
-    res.header("Content-Disposition", `attachment; filename="video.${type}"`);
+    const title = info.videoDetails.title.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 
-    if (type === "mp3") {
-      ytdl(url, { filter: "audioonly", quality: "highestaudio" }).pipe(res);
-    } else {
-      ytdl(url, { quality: "highestvideo" }).pipe(res);
-    }
+    res.header("Content-Disposition", `attachment; filename="${title}.mp4"`);
+    ytdl(url, { quality: "highestvideo", filter: "videoandaudio" }).pipe(res);
   } catch (err) {
-    res.status(500).json({ error: "Failed to download", details: err.message });
+    res.status(500).json({ error: "Download failed", message: err.message });
   }
 });
 
