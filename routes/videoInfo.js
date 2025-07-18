@@ -17,8 +17,19 @@ router.get('/', async (req, res) => {
       channel: details.author.name,
       views: details.viewCount,
     });
+
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch video info', message: err.message });
+    if (err.statusCode === 410) {
+      return res.status(410).json({
+        error: 'YouTube blocked this request (410)',
+        message: 'Try another video or wait a while. This is a known YouTube restriction.'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to fetch video info',
+      message: err.message
+    });
   }
 });
 
