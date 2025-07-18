@@ -1,26 +1,22 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { Client } = require('youtubei.js');
+const play = require("play-dl");
 
-router.get('/', async (req, res) => {
-  const videoId = req.query.id;
-  const type = req.query.type || 'video';
-
-  if (!videoId) {
-    return res.status(400).json({ error: 'Missing YouTube ID' });
-  }
+router.get("/", async (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).json({ error: "Missing YouTube ID" });
 
   try {
-    const client = new Client();
-    const video = await client.getVideo(videoId);
-    const stream =
-      type === 'audio' ? video.download(0) : video.download(video.quality);
-    res.redirect(stream.url);
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to process download',
-      message: error.message
-    });
+    const url = `https://www.youtube.com/watch?v=${id}`;
+    const stream = await play.stream(url, { quality: 0 });
+
+    res.setHeader("Content-Disposition", `attachment; filename="${id}.mp3"`);
+    res.setHeader("Content-Type", "audio/mp3");
+
+    stream.stream.pipe(res);
+  } catch (err) {
+    console.error("Download Error:", err);
+    res.status(500).json({ error: "Failed to download audio" });
   }
 });
 
