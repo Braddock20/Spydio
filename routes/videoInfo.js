@@ -1,27 +1,30 @@
-
 const express = require('express');
 const router = express.Router();
-const { Innertube } = require('youtubei.js');
+const { Client } = require('youtubei.js');
 
 router.get('/', async (req, res) => {
-  const { id } = req.query;
-  if (!id) return res.status(400).json({ error: 'Missing video ID' });
+  const videoId = req.query.id;
+  if (!videoId) {
+    return res.status(400).json({ error: 'Missing YouTube URL or ID' });
+  }
 
   try {
-    const yt = await new Innertube();
-    const info = await yt.getInfo(id);
-    const videoDetails = info.basic_info;
-
+    const client = new Client();
+    const video = await client.getVideo(videoId);
     res.json({
-      title: videoDetails.title,
-      author: videoDetails.author,
-      duration: videoDetails.duration,
-      thumbnail: videoDetails.thumbnail?.url,
-      description: videoDetails.description,
-      views: videoDetails.view_count
+      title: video.title,
+      description: video.description,
+      duration: video.durationFormatted,
+      views: video.viewCount,
+      thumbnail: video.thumbnail.url,
+      channel: video.channel.name,
+      published: video.uploadDate
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch video info', message: error.message });
+    res.status(500).json({
+      error: 'YouTube blocked this request (410)',
+      message: error.message
+    });
   }
 });
 
