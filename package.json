@@ -1,13 +1,22 @@
 {
-  "name": "youtube-api",
+  "name": "spydio-api",
   "version": "1.0.0",
-  "description": "Personal YouTube API with info, download, stream, and embed features.",
+  "description": "Personal YouTube API for video info, stream, and download",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
+  "keywords": [
+    "youtube",
+    "api",
+    "video",
+    "ytdl",
+    "express"
+  ],
+  "author": "Braddock20",
+  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "ytdl-core": "^4.11.1"
+    "ytdl-core": "4.9.1"
   }
 }
