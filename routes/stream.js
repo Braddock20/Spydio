@@ -1,23 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { Client } = require('youtubei.js');
+const play = require("play-dl");
 
-router.get('/', async (req, res) => {
-  const videoId = req.query.id;
-  if (!videoId) {
-    return res.status(400).json({ error: 'Missing YouTube ID' });
-  }
+router.get("/", async (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).json({ error: "Missing YouTube ID" });
 
   try {
-    const client = new Client();
-    const video = await client.getVideo(videoId);
-    const best = video.download(video.quality); // best available
-    res.json({ streamUrl: best.url });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch video stream',
-      message: error.message
-    });
+    const url = `https://www.youtube.com/watch?v=${id}`;
+    const stream = await play.stream(url); // Best video+audio stream
+
+    res.setHeader("Content-Type", "video/mp4");
+    stream.stream.pipe(res);
+  } catch (err) {
+    console.error("Video Stream Error:", err);
+    res.status(500).json({ error: "Failed to stream video" });
   }
 });
 
