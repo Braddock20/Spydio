@@ -1,34 +1,35 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const ytdl = require('ytdl-core');
+const axios = require("axios");
 
-router.get('/', async (req, res) => {
-  const videoURL = req.query.url;
-  if (!videoURL) return res.status(400).json({ error: 'Missing YouTube URL' });
+router.get("/", async (req, res) => {
+  const videoUrl = req.query.url;
+  if (!videoUrl) {
+    return res.status(400).json({ error: "Missing YouTube URL" });
+  }
+
+  // Extract videoId
+  const videoIdMatch = videoUrl.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  const videoId = videoIdMatch ? videoIdMatch[1] : null;
+  if (!videoId) return res.status(400).json({ error: "Invalid YouTube URL" });
 
   try {
-    const info = await ytdl.getInfo(videoURL);
-    const details = info.videoDetails;
+    const response = await axios.get(`https://pipedapi.kavin.rocks/streams/${videoId}`);
+    const info = response.data;
 
     res.json({
-      title: details.title,
-      duration: details.lengthSeconds + ' seconds',
-      thumbnail: details.thumbnails[details.thumbnails.length - 1].url,
-      channel: details.author.name,
-      views: details.viewCount,
+      title: info.title,
+      description: info.description,
+      thumbnail: info.thumbnailUrl,
+      channel: info.uploader,
+      duration: info.duration,
+      audio: info.audioStreams[0]?.url,
+      video: info.videoStreams[0]?.url,
     });
-
   } catch (err) {
-    if (err.statusCode === 410) {
-      return res.status(410).json({
-        error: 'YouTube blocked this request (410)',
-        message: 'Try another video or wait a while. This is a known YouTube restriction.'
-      });
-    }
-
     res.status(500).json({
-      error: 'Failed to fetch video info',
-      message: err.message
+      error: "Failed to fetch video from proxy",
+      message: err.message,
     });
   }
 });
