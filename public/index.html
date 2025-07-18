@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>📰 News Scraper Test</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      padding: 30px;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 { color: #222; }
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .news-card {
+      background: #fff;
+      margin-top: 20px;
+      padding: 15px;
+      border-left: 4px solid #2196f3;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    }
+    .news-card a {
+      font-weight: bold;
+      color: #2196f3;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧪 Scrape News from a Site</h1>
+  <p>Try: <code>bbc</code>, <code>cnn</code>, or <code>https://techcrunch.com</code></p>
+
+  <input type="text" id="siteInput" placeholder="e.g. bbc or https://techcrunch.com">
+  <button onclick="fetchNews()">Fetch News</button>
+
+  <div id="newsContainer"></div>
+
+  <script>
+    async function fetchNews() {
+      const site = document.getElementById("siteInput").value.trim();
+      const container = document.getElementById("newsContainer");
+      container.innerHTML = "<p>⏳ Loading...</p>";
+
+      try {
+        const res = await fetch(`/news?site=${encodeURIComponent(site)}`);
+        const data = await res.json();
+
+        if (!data.articles || data.articles.length === 0) {
+          container.innerHTML = "<p>No articles found.</p>";
+          return;
+        }
+
+        container.innerHTML = `<h2>Articles from ${data.site}</h2>`;
+        data.articles.forEach(article => {
+          const card = document.createElement("div");
+          card.className = "news-card";
+          card.innerHTML = `<a href="${article.link}" target="_blank">${article.title}</a>`;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        container.innerHTML = `<p style="color:red;">❌ Error: ${err.message}</p>`;
+      }
+    }
+  </script>
+
+</body>
+</html>
