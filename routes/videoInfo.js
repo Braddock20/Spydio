@@ -1,36 +1,25 @@
 const express = require("express");
+const ytdl = require("ytdl-core");
 const router = express.Router();
-const axios = require("axios");
 
 router.get("/", async (req, res) => {
-  const videoUrl = req.query.url;
-  if (!videoUrl) {
-    return res.status(400).json({ error: "Missing YouTube URL" });
+  const { url } = req.query;
+  if (!url || !ytdl.validateURL(url)) {
+    return res.status(400).json({ error: "Invalid or missing YouTube URL" });
   }
 
-  // Extract videoId
-  const videoIdMatch = videoUrl.match(/(?:v=|youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/);
-  const videoId = videoIdMatch ? videoIdMatch[1] : null;
-  if (!videoId) return res.status(400).json({ error: "Invalid YouTube URL" });
-
   try {
-    const response = await axios.get(`https://pipedapi.kavin.rocks/streams/${videoId}`);
-    const info = response.data;
-
+    const info = await ytdl.getInfo(url);
     res.json({
-      title: info.title,
-      description: info.description,
-      channel: info.uploader,
-      duration: info.duration,
-      thumbnail: info.thumbnailUrl,
-      audio: info.audioStreams?.[0]?.url,
-      video: info.videoStreams?.[0]?.url
+      title: info.videoDetails.title,
+      description: info.videoDetails.description,
+      thumbnail: info.videoDetails.thumbnails.pop().url,
+      channel: info.videoDetails.author.name,
+      duration: info.videoDetails.lengthSeconds,
+      videoId: info.videoDetails.videoId
     });
   } catch (err) {
-    res.status(500).json({
-      error: "Failed to fetch video from Piped API",
-      message: err.message
-    });
+    res.status(500).json({ error: "Failed to fetch video info", message: err.message });
   }
 });
 
