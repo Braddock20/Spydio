@@ -1,25 +1,26 @@
-
 const express = require('express');
 const router = express.Router();
-const { Innertube } = require('youtubei.js');
+const { Client } = require('youtubei.js');
 
 router.get('/', async (req, res) => {
-  const { id, type } = req.query;
-  if (!id) return res.status(400).json({ error: 'Missing video ID' });
+  const videoId = req.query.id;
+  const type = req.query.type || 'video';
+
+  if (!videoId) {
+    return res.status(400).json({ error: 'Missing YouTube ID' });
+  }
 
   try {
-    const yt = await new Innertube();
-    const info = await yt.getInfo(id);
-
-    if (type === 'audio') {
-      const audio = info.streaming_data?.adaptive_formats?.find(f => f.mime_type.includes('audio'));
-      return res.redirect(audio?.url || '/404');
-    } else {
-      const video = info.streaming_data?.formats?.[0];
-      return res.redirect(video?.url || '/404');
-    }
+    const client = new Client();
+    const video = await client.getVideo(videoId);
+    const stream =
+      type === 'audio' ? video.download(0) : video.download(video.quality);
+    res.redirect(stream.url);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch download URL', message: error.message });
+    res.status(500).json({
+      error: 'Failed to process download',
+      message: error.message
+    });
   }
 });
 
