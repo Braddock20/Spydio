@@ -1,12 +1,25 @@
-const express = require("express");
+const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use("/api/video-info", require("./routes/videoInfo"));
-app.use("/api/thumbnail", require("./routes/thumbnail"));
-app.use("/api/download", require("./routes/download"));
-app.use("/api/stream", require("./routes/stream"));
-app.use("/api/embed", require("./routes/embed"));
+// Import all your route files
+const videoInfoRoute = require('./routes/videoInfo');
+const downloadRoute = require('./routes/download');
+const streamRoute = require('./routes/stream');
+const embedRoute = require('./routes/embed');
+const thumbRoute = require('./routes/thumbnail');
 
-app.get("/", (req, res) => res.send("YouTube API is running!"));
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Test base route
+app.get('/', (req, res) => {
+  res.send('✅ Spydio API is live');
+});
+
+// Register routes
+app.use('/videoInfo', videoInfoRoute);
+app.use('/download', downloadRoute);
+app.use('/stream', streamRoute);
+app.use('/embed', embedRoute);
+app.use('/thumbnail', thumbRoute);
+
+// Start the server
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
