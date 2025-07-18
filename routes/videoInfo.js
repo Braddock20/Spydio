@@ -1,30 +1,27 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { Client } = require('youtubei.js');
+const play = require("play-dl");
 
-router.get('/', async (req, res) => {
-  const videoId = req.query.id;
-  if (!videoId) {
-    return res.status(400).json({ error: 'Missing YouTube URL or ID' });
-  }
+router.get("/", async (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).json({ error: "Missing YouTube ID" });
 
   try {
-    const client = new Client();
-    const video = await client.getVideo(videoId);
+    const url = `https://www.youtube.com/watch?v=${id}`;
+    const info = await play.video_basic_info(url);
+
     res.json({
-      title: video.title,
-      description: video.description,
-      duration: video.durationFormatted,
-      views: video.viewCount,
-      thumbnail: video.thumbnail.url,
-      channel: video.channel.name,
-      published: video.uploadDate
+      title: info.video_details.title,
+      description: info.video_details.description,
+      channel: info.video_details.channel.name,
+      duration: info.video_details.durationRaw,
+      views: info.video_details.views,
+      thumbnails: info.video_details.thumbnails,
+      url: url
     });
   } catch (error) {
-    res.status(500).json({
-      error: 'YouTube blocked this request (410)',
-      message: error.message
-    });
+    console.error("Video Info Error:", error);
+    res.status(500).json({ error: "Failed to fetch video info" });
   }
 });
 
